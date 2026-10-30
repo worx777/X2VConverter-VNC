@@ -1,17 +1,12 @@
-# X2VConverter
+# X2VConverter-VNC
 Simple RealVNC address book XML to VNC converter script in Python.
 
-# Usage
+# Usage - either interactive or with given parameters
 ```
-  $python xmltovnc.py
+  $python3 xmltovnc.py
 ```
 or
 ```
-  $python xmltovnc.py </your_path/your.xml> <saving_directory>
+  $python3 xmltovnc.py </your_path/your.xml> <saving_directory>
 ```
 
-&nbsp;
-
-<p align="center">
-	<img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/footers/gray0_ctp_on_line.svg?sanitize=true" />
-</p>
