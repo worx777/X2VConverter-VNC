@@ -1,45 +1,92 @@
+
 import sys
+import os
 from xml.dom import minidom
 
-def generate_vnc_files(file, save_dir):
 
-    XMLfile = minidom.parse(file)
+def generate_vnc_files(xml_file, save_dir):
 
-    for i in XMLfile.getElementsByTagName("file"):
+    print(f"Reading XML file: {xml_file}")
 
-        content = []
-        save_file = open(f'{(save_dir)}{"/" if save_dir[-1]!="/" else ""}{i.getAttribute("name")}.vnc', "a")
+    xml_data = minidom.parse(xml_file)
 
-        content.append(f'ConnMethod=tcp\n')
-        content.append(f'FriendlyName={i.getAttribute("name")}\n')
-        content.append(f'Host={i.getAttribute("name")}\n')
+    os.makedirs(save_dir, exist_ok=True)
 
-        for j in i.getElementsByTagName("section"):
+    files = xml_data.getElementsByTagName("file")
 
-            for k in j.getElementsByTagName("param"):
+    print(f"Found {len(files)} connections.")
 
-                if k.getAttribute("name") is "Identity":
-                    content.append(f'Identity={k.getAttribute("value")}\n')
-                elif k.getAttribute("name") is "Password":
-                    content.append(f'Password={k.getAttribute("value")}\n')
-                    
-        save_file.writelines(content)
-        content.pop()
+    for file_node in files:
+
+        name = file_node.getAttribute("name")
+
+        host = ""
+        identity = ""
+        password = ""
+
+        for section in file_node.getElementsByTagName("section"):
+
+            for param in section.getElementsByTagName("param"):
+
+                param_name = param.getAttribute("name")
+                param_value = param.getAttribute("value")
+
+                if param_name == "Host":
+                    host = param_value
+
+                elif param_name == "UserName":
+                    identity = param_value
+
+                elif param_name == "Password":
+                    password = param_value
+
+        if not host:
+            print(f"Skipping {name}: No Host found.")
+            continue
+
+        content = [
+            "ConnMethod=tcp\n",
+            f"FriendlyName={name}\n",
+            f"Host={host}\n",
+            f"Identity={identity}\n",
+            f"Password={password}\n"
+        ]
+
+        save_path = os.path.join(save_dir, f"{name}.vnc")
+
+        with open(save_path, "w", encoding="utf-8") as save_file:
+            save_file.writelines(content)
+
+        print(f"Created: {save_path}")
+
 
 def main():
 
     if len(sys.argv) > 3:
-        printf(f'Too many arguments')
-    elif len(sys.argv) == 2 or 0:
-        print(f'Too few argument.')
+        print("Too many arguments.")
+        sys.exit(1)
+
+    if len(sys.argv) == 3:
+        xml_file = sys.argv[1]
+        save_dir = sys.argv[2]
+
     else:
-        file = sys.argv[1] if sys.argv[1]  else input("Enter RealVNC's xml file: ")
-        save_dir = sys.argv[2] if sys.argv[2] input("Enter saving directory: ")
+        xml_file = input("Enter RealVNC's XML file: ").strip()
+        save_dir = input("Enter saving directory: ").strip()
 
-    generate_vnc_files(file, save_dir)
+    if not os.path.isfile(xml_file):
+        print(f"XML file not found: {xml_file}")
+        sys.exit(1)
 
-main()
-    
- 
+    try:
+        generate_vnc_files(xml_file, save_dir)
+
+        print("\nConversion completed!")
+
+    except Exception as error:
+        print(f"Error: {error}")
+        sys.exit(1)
 
 
+if __name__ == "__main__":
+    main()
